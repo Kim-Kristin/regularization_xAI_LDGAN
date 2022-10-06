@@ -3,43 +3,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-
-
-class GeneratorNetwork(torch.nn.Module):
-    """
-    A three hidden-layer generative neural network
-    """
-
-    def __init__(self):
-        super(GeneratorNetwork, self).__init__()
-        self.n_features = 100
-        self.n_out = (1, 32, 32)
-
-        self.input_layer = nn.Sequential(
-            nn.Linear(self.n_features, 256),
-            nn.LeakyReLU(0.2)
-        )
-        self.hidden1 = nn.Sequential(
-            nn.Linear(256, 512),
-            nn.LeakyReLU(0.2)
-        )
-        self.hidden2 = nn.Sequential(
-            nn.Linear(512, 1296),
-            nn.LeakyReLU(0.2)
-        )
-        self.out = nn.Sequential(
-            nn.Linear(1296, int(np.prod(self.n_out))),
-            nn.Tanh()
-        )
-
-    def forward(self, input):
-        """ overrides the __call__ method of the generator """
-        output = self.input_layer(input)
-        output = self.hidden1(output)
-        output = self.hidden2(output)
-        output = self.out(output)
-        output = output.view(output.size(0), *self.n_out)
-        return output
+from torchsummary import summary
 
 
 class GeneratorNetworkCIFAR10(torch.nn.Module):
@@ -52,23 +16,28 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
         self.input_layer = nn.Sequential(
             nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
-            nn.ReLU(True),
+            nn.LeakyReLU(0.2, inplace=True),
         )
 
         self.hidden1 = nn.Sequential(
             nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 4),
-            nn.ReLU(True),
+            nn.LeakyReLU(0.2, inplace=True),
         )
 
         self.hidden2 = nn.Sequential(
             nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 2),
-            nn.ReLU(True),
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.hidden3 = nn.Sequential(
+            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 2),
+            nn.LeakyReLU(0.2, inplace=True),
         )
 
         self.out = nn.Sequential(
-            nn.ConvTranspose2d(ngf * 2, nc, 4, 2, 1, bias=False),
+            nn.Conv2d(ngf * 2, nc, 4, 2, 1, bias=False),
             nn.Tanh()
         )
 
@@ -81,4 +50,5 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
         return output
 
 
-generator = GeneratorNetwork()
+generator = GeneratorNetworkCIFAR10()
+summary(generator, (100, 32, 32))
