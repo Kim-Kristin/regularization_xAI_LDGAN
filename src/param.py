@@ -1,5 +1,6 @@
 import torch
 import random
+import device
 
 # Root directory for dataset
 dataroot = "data/"
@@ -44,3 +45,15 @@ randomseed = 999
 print("Random Seed: ", randomseed)
 random.seed(randomseed)
 torch.manual_seed(randomseed)
+
+random_Tensor = torch.randn(batch_size, latent_size, 1, 1, device= device.device)
+
+
+# Split
+
+# Train, Validation, Test
+TEST_SPLIT = 0.2
+VALID_SPLIT = 0.0
+TRAIN_SPLIT = (1-(TEST_SPLIT+VALID_SPLIT))
+
+SPLIT_AUFTEILUNG = {TRAIN_SPLIT, VALID_SPLIT, TEST_SPLIT}
