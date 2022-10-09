@@ -1,20 +1,3 @@
-# Module - Training DCGAN
-
-import torch.optim as optim  # Optimierungs-Algorithmen
-from torchvision.utils import save_image  # Speichern von Bildern
-from torch.autograd import Variable
-import os
-from torchvision.utils import make_grid
-import matplotlib.pyplot as plt
-import torch.nn.functional as F
-import torch.nn as nn
-import torch
-import inital_weight
-import discriminator
-import generator
-import param
-import device
-import dataloader
 import sys
 
 # Append needed function/module paths
@@ -22,6 +5,27 @@ sys.path.append('./src')
 sys.path.append('./src/param')
 sys.path.append('./src/device')
 sys.path.append('./src/dataloader')
+
+
+# Module - Training DCGAN
+import dataloader
+import device
+import param
+import generator
+import discriminator
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
+import os
+from torch.autograd import Variable
+from torchvision.utils import save_image  # Speichern von Bildern
+import torch.optim as optim  # Optimierungs-Algorithmen
+
+
+#import inital_weight
+
 
 # Import custom functions
 

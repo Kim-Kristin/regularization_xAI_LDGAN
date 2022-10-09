@@ -14,41 +14,36 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
         nc, nz, ngf = 3, 100, 64
 
         self.input_layer = nn.Sequential(
+            # input is Z, going into a convolution
             nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
-
-        self.hidden1 = nn.Sequential(
+            nn.ReLU(True),
+            # state size. (ngf*8) x 4 x 4
             nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 4),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
-
-        self.hidden2 = nn.Sequential(
+            nn.ReLU(True),
+            # state size. (ngf*4) x 8 x 8
             nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf * 2),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
-        self.hidden3 = nn.Sequential(
-            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf * 2),
-            nn.LeakyReLU(0.2, inplace=True),
-        )
-
-        self.out = nn.Sequential(
-            nn.Conv2d(ngf * 2, nc, 4, 2, 1, bias=False),
+            nn.ReLU(True),
+            # state size. (ngf*2) x 16 x 16
+            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(True),
+            # state size. (ngf) x 32 x 32
+            nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False),
             nn.Tanh()
+            # state size. (nc) x 64 x 64
         )
 
     def forward(self, input):
         """ overrides the __call__ method of the generator """
         output = self.input_layer(input)
-        output = self.hidden1(output)
+        """output = self.hidden1(output)
         output = self.hidden2(output)
-        output = self.out(output)
+        output = self.out(output)"""
         return output
 
 
-generator = GeneratorNetworkCIFAR10()
-summary(generator, (100, 32, 32))
+#generator = GeneratorNetworkCIFAR10()
+#summary(generator, (100, 32, 32))
