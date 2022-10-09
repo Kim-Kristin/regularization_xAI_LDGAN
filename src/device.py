@@ -4,15 +4,15 @@ import torch
 
 
 def get_default_device():
-    if torch.cuda.is_available():     # Wenn cuda verfügbar dann:
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    elif torch.cuda.is_available():     # Wenn cuda verfügbar dann:
         return torch.device('cuda')   # Nutze Device = Cuda (=GPU)
     else:                         # Ansonsten
         return torch.device('cpu')    # Nutze Device = CPU
 
 
 # Anzeigen welches Device verfügbar ist
-device = get_default_device()
-print(device)
 
 # Hilfsklasse zum Verschieben des Dataloaders "org_loader" auf das jeweilige Device
 
@@ -32,3 +32,7 @@ class DeviceDataLoader():
     def __iter__(self):
         for batch in self.dataloader:
             yield tuple(tensor.to(self.device) for tensor in batch)
+
+
+device = get_default_device()
+print(device)
