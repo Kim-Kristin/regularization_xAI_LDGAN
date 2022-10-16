@@ -26,7 +26,8 @@
   "python.linting.banditEnabled": false,
   "python.formatting.provider": "autopep8",
   "python.analysis.extraPaths": [
-    "${workspaceFolder}/src"
+    "${workspaceFolder}/src",
+    "./LIME"
   ],
   "terminal.integrated.profiles.windows": {
     "PowerShell": {
