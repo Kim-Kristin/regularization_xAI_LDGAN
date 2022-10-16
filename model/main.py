@@ -8,9 +8,12 @@ sys.path.append('./model/train')
 sys.path.append('./model/test')
 sys.path.append('./model/generator')
 sys.path.append('./model/discriminator')
+sys.path.append('./src')
+sys.path.append('./src/weightinit')
 sys.path.append('./src/device')
 sys.path.append('./src/dataloader')
 sys.path.append('./src/param')
+
 
 import train
 import test
@@ -20,9 +23,10 @@ from generator import GeneratorNetworkCIFAR10 as NN_Generator
 import device
 import dataloader
 import param
+import weightinit
 
 NN_Generator = NN_Generator().to(device.device)
 NN_Discriminator = NN_Discriminator().to(device.device)
 
-G_losses, D_losses, R_Score, F_Score =train_DCGAN.training(NN_Discriminator, NN_Generator, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size)
+G_losses, D_losses, R_Score, F_Score =train_DCGAN.training(NN_Discriminator, NN_Generator,  dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, True)
 
