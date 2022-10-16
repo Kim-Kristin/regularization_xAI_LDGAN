@@ -9,7 +9,7 @@ dataroot = "data/"
 num_workers = 0
 
 # Batch size during training
-batch_size = 128
+batch_size = 64
 
 # Spatial size of training images. All images will be resized to this
 #   size using a transformer.
@@ -46,6 +46,7 @@ print("Random Seed: ", randomseed)
 random.seed(randomseed)
 torch.manual_seed(randomseed)
 
+#Random Tensor
 random_Tensor = torch.randn(batch_size, latent_size, 1, 1, device= device.device)
 
 

@@ -5,7 +5,8 @@ sys.path.append('./src')
 sys.path.append('./src/param')
 sys.path.append('./src/device')
 sys.path.append('./src/dataloader')
-
+sys.path.append('./LIME')
+sys.path.append('./LIME/limexAI')
 
 # Module - Training DCGAN
 import dataloader
@@ -22,6 +23,9 @@ import os
 from torch.autograd import Variable
 from torchvision.utils import save_image  # Speichern von Bildern
 import torch.optim as optim  # Optimierungs-Algorithmen
+import time
+import limexAI
+
 
 
 #import inital_weight
@@ -87,7 +91,7 @@ class train_DCGAN():
         #print("Training disc")
         return loss_sum.item(), real_score, fake_score
 
-    def train_generator(NN_Discriminator, NN_Generator, Gen_Opt, batchsize, random_Tensor, device):
+    def train_generator(NN_Discriminator, NN_Generator, Gen_Opt, batchsize, random_Tensor, device, trained_data, local_explainable):
 
         #Gradienten = 0
         Gen_Opt.zero_grad()
@@ -100,10 +104,21 @@ class train_DCGAN():
         target = torch.ones(batchsize, 1, device=device)
         # Torch.ones gibt einen tensor zurück welcher nur den Wert 1 enthält, und dem Shape Size = BATCH_SIZE
         target = torch.flatten(target)
+
+
+        #Call xAI
+        if local_explainable:
+            limexAI.get_explanation(generated_data=fake_img, discriminator=NN_Discriminator, prediction=pred,
+                            device=device, trained_data=trained_data)
+
+
+
         loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
+        loss.backward()
+
+        torch.nn.utils.clip_grad_norm_(NN_Generator.parameters(), 10)
 
         # Backprop./ Update der Gewichte des Generators
-        loss.backward()
         Gen_Opt.step()
 
         #print("Training Gen")
@@ -139,12 +154,28 @@ class train_DCGAN():
         train_DCGAN.show_images(gen_img)  # Plotten der Fake_Images
         print("Gespeichert")
 
-    def training(NN_Discriminator, NN_Generator, train_loader, random_Tensor, num_epochs, device, lr, batchsize, start_idx=1):
+    def training(NN_Discriminator, NN_Generator, train_loader, random_Tensor, num_epochs, device, lr, batchsize, weights_init, explainable, start_idx=1):
 
         torch.cuda.empty_cache()  # leert den Cache, wenn auf der GPU gearbeitet wird
 
+        start_time = time.time()
+
+        explanationSwitch = (num_epochs + 1) / 2 if num_epochs % 2 == 1 else num_epochs / 2
+
+        NN_Generator.apply(weights_init)
+        NN_Discriminator.apply(weights_init)
+
+
         NN_Discriminator.train()
         NN_Generator.train()
+
+        if explainable:
+            trained_data = Variable(next(iter(train_loader))[0])
+            if device == "mps" or device== "cuda":
+                trained_data = trained_data.to(device)
+        else:
+            trained_data = None
+
 
         # Listen für Übersicht des Fortschritts
         R_Score = []
@@ -165,22 +196,30 @@ class train_DCGAN():
         Dis_Opt = torch.optim.Adam(
             NN_Discriminator.parameters(), lr=lr, betas=(0.6, 0.999))
 
+        local_explainable = False
+
         # Iteration über die Epochen
-        for epoch in range(0, num_epochs):
+        for epoch in range(1, num_epochs+1):
+
+            if explainable and (num_epochs-1) == explanationSwitch:
+                NN_Generator.out.register_backward_hook(limexAI.explanation_hook_cifar)
+            local_explainable = True
+
             print("Epoch:", epoch)
             # Iteration über die Bilder
             for i, data in enumerate(train_loader, 0):
-                print("Batch:", i)
+
                 img_real, label = data
                 #train_DCGAN.saves_gen_samples(img_real, epoch+start_idx, random_Tensor)
                 # print(img_real.size())
+
                 # Trainieren des Diskrimniators
                 d_loss, real_score, fake_score = train_DCGAN.train_discriminator(
                     NN_Discriminator, NN_Generator, img_real, Dis_Opt, random_Tensor, device)
 
                 # Trainieren des Generators
                 g_loss, g_img = train_DCGAN.train_generator(
-                    NN_Discriminator, NN_Generator, Gen_Opt, batchsize, random_Tensor, device)
+                    NN_Discriminator, NN_Generator, Gen_Opt, batchsize, random_Tensor, device, trained_data,local_explainable)
 
                 # Count = i #Index/ Iterationen zählen
                 #print("index:", i, "D_loss:", d_loss,"G_Loss:", g_loss)
