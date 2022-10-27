@@ -164,7 +164,7 @@ print(' '.join(f'{classes[labels[j]]:5s}' for j in range(param.batch_size)))
 train_loader = device.DeviceDataLoader(train_dataloader_CIFAR10, device.device)
 
 # https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-for i, data in enumerate(train_loader):
+"""for i, data in enumerate(train_loader):
     real_img, label = data
 
     fake_img_name = "gen_img-{0:0=4d}.png".format(i)
@@ -175,4 +175,4 @@ for i, data in enumerate(train_loader):
     save_image(real_img, os.path.join(
         dir_gen_samples, fake_img_name), nrow=8)
     print("Gespeichert")
-    break
+    break"""

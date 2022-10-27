@@ -31,6 +31,7 @@ class DiscriminatorNetCifar10(torch.nn.Module):
             # state size. (ndf*8) x 4 x 4
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
             nn.Sigmoid()
+            #nn.Softmax()
         )
 
     def forward(self, input):

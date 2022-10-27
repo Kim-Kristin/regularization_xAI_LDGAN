@@ -5,6 +5,9 @@ import device
 # Root directory for dataset
 dataroot = "data/"
 
+# Limitierung des Discriminators =True
+limited=True
+
 # Number of workers for dataloader
 num_workers = 0
 
