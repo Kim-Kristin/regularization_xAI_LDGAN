@@ -19,7 +19,7 @@ global values
 global discriminatorLime
 
 
-def get_explanation(generated_data, discriminator, prediction, device, trained_data=None) -> None:
+def get_explanation(generated_data, discriminator, prediction, device, trained_data=None):
     '''
     This function calculates the explanation for given generated images using the desired xAI systems and the
     :param generated_data: data created by the generator
@@ -45,8 +45,8 @@ def get_explanation(generated_data, discriminator, prediction, device, trained_d
 
     # mask values with low prediction
     mask = (prediction < 0.5).view(-1)
-    indices = (mask.nonzero(as_tuple=False)).detach().cpu().numpy().flatten().tolist()
-
+    indices = (mask.nonzero(as_tuple=False)).cpu().numpy().flatten().tolist() #.detach().cpu().numpy().flatten().tolist()
+    print("Indices:", indices)
     data = generated_data[mask, :]
 
     if len(indices) > 1:
@@ -57,14 +57,14 @@ def get_explanation(generated_data, discriminator, prediction, device, trained_d
         discriminatorLime.eval()
         for i in range(len(indices)):
             tmp = data[i, :].detach().cpu().numpy()
-            print(tmp.shape)
+            #print(tmp.shape)
             tmp = np.reshape(tmp, (64, 64, 3)).astype(np.double)
             #tmp =
             exp = explainer.explain_instance(tmp, batch_predict_cifar, num_samples=100)
         temp[indices[i], :] = torch.tensor(mask) #.astype(np.float))
         del discriminatorLime
-    else:
-        raise Exception("wrong xAI type given")
+    #else:
+    #    raise Exception("wrong xAI type given")
 
     if device == "mps" or device == "cuda":
         temp = temp.to(device)
