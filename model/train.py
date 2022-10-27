@@ -1,4 +1,5 @@
 import sys
+from xml.sax.xmlreader import InputSource
 
 # Append needed function/module paths
 sys.path.append('./src')
@@ -39,7 +40,7 @@ import limexAI
 # Train Normal DCGAN
 
 class train_DCGAN():
-    def train_discriminator(NN_Discriminator, NN_Generator, real_images, Dis_Opt, random_Tensor, device):
+    def train_discriminator(NN_Discriminator, NN_Generator, real_images, Dis_Opt, random_Tensor, limited, batchindx, batchsize, trained_data, Gen_Opt, local_explainable, device):
 
         #Gradienten = 0
         Dis_Opt.zero_grad()
@@ -59,7 +60,7 @@ class train_DCGAN():
         # Berechnung des Losses mit realen Bildern
         criterion = nn.BCELoss()
         loss_real = criterion(pred_real, target_real)
-        real_score = torch.mean(pred_real).item()
+        #real_score = torch.mean(pred_real).item()
 
         """
         2 Erstellen von Fake_Bildern
@@ -78,18 +79,49 @@ class train_DCGAN():
         target_fake = torch.zeros(fake_img.size(0), 1, device=device)
         target_fake = torch.flatten(target_fake)
         # Loss Function - Fehler des Fake-Batch wird berechnet
-        loss_fake = F.binary_cross_entropy(pred_fake, target_fake)
-        fake_score = torch.mean(pred_fake).item()
+        loss_fake = criterion(pred_fake, target_fake)
+        #fake_score = torch.mean(pred_fake).item()
 
-        # Berechnung des Gesamt-Loss von realen und fake Images
+        #THRESHOLD
         loss_sum = loss_real + loss_fake
+        loss_avg = loss_sum/2
 
-        # Update der Gewichte des Diskriminators
-        loss_sum.backward()
-        Dis_Opt.step()
+        if batchindx < (real_images.size(dim=0)/2):
+            #Normal
+            print("Normal-Train", batchindx, "from",real_images.size(dim=0)/2)
+            # Berechnung des Gesamt-Loss von realen und fake Images
+
+            # Update der Gewichte des Diskriminators
+            loss_sum.backward()
+            Dis_Opt.step()
+        else:
+            print("Limited-Train", batchindx)
+            # Berechnung des Gesamt-Loss von realen und fake Images
+            eDisc = 0.5
+
+            # Generator
+            # Trainieren des Generators
+            g_loss, g_img = train_DCGAN.train_generator(NN_Discriminator, NN_Generator, Gen_Opt, batchsize, random_Tensor, device, trained_data,local_explainable)
+            eGen = 5.0
+
+            if loss_avg.item() > eDisc:
+                #Algorithmus 2
+                torch.autograd.set_detect_anomaly(True)
+                print("Algorithmus 2")
+                loss_sum.clone()
+                loss_sum.backward(retain_graph=True)
+                Dis_Opt.step()
+            elif g_loss > eGen:
+                #Algorithmus 3
+                print("Algorithmus 3")
+
+                loss_sum.backward()
+                Dis_Opt.step()
+            else:
+                pass
 
         #print("Training disc")
-        return loss_sum.item(), real_score, fake_score
+        return loss_sum.item(), loss_avg.item() #real_score, fake_score
 
     def train_generator(NN_Discriminator, NN_Generator, Gen_Opt, batchsize, random_Tensor, device, trained_data, local_explainable):
 
@@ -111,9 +143,10 @@ class train_DCGAN():
             limexAI.get_explanation(generated_data=fake_img, discriminator=NN_Discriminator, prediction=pred,
                             device=device, trained_data=trained_data)
 
-
-
-        loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
+        #loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
+        criterion = nn.BCELoss()
+        loss = criterion(pred, target)
+        print("loss_Gen:", loss)
         loss.backward()
 
         torch.nn.utils.clip_grad_norm_(NN_Generator.parameters(), 10)
@@ -154,7 +187,7 @@ class train_DCGAN():
         train_DCGAN.show_images(gen_img)  # Plotten der Fake_Images
         print("Gespeichert")
 
-    def training(NN_Discriminator, NN_Generator, train_loader, random_Tensor, num_epochs, device, lr, batchsize, weights_init, explainable, start_idx=1):
+    def training(NN_Discriminator, NN_Generator, limited, train_loader, random_Tensor, num_epochs, device, lr, batchsize, weights_init, explainable, start_idx=1):
 
         torch.cuda.empty_cache()  # leert den Cache, wenn auf der GPU gearbeitet wird
 
@@ -178,10 +211,13 @@ class train_DCGAN():
 
 
         # Listen für Übersicht des Fortschritts
-        R_Score = []
-        F_Score = []
+        #R_Score = []
+        #F_Score = []
         G_losses = []
         D_losses = []
+
+        #AVG
+        D_losses_avg = []
 
         # Quelle: https://medium.com/@Biboswan98/optim-adam-vs-optim-sgd-lets-dive-in-8dbf1890fbdc
         # https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/
@@ -211,11 +247,10 @@ class train_DCGAN():
 
                 img_real, label = data
                 #train_DCGAN.saves_gen_samples(img_real, epoch+start_idx, random_Tensor)
-                # print(img_real.size())
 
                 # Trainieren des Diskrimniators
-                d_loss, real_score, fake_score = train_DCGAN.train_discriminator(
-                    NN_Discriminator, NN_Generator, img_real, Dis_Opt, random_Tensor, device)
+                d_loss_sum, d_loss_avg = train_DCGAN.train_discriminator(
+                    NN_Discriminator, NN_Generator, img_real, Dis_Opt, random_Tensor, limited, i, batchsize, trained_data, Gen_Opt, local_explainable, device)
 
                 # Trainieren des Generators
                 g_loss, g_img = train_DCGAN.train_generator(
@@ -225,20 +260,27 @@ class train_DCGAN():
                 #print("index:", i, "D_loss:", d_loss,"G_Loss:", g_loss)
 
             # Speichern des Gesamtlosses von D und G und der Real und Fake Scores
-            D_losses.append(d_loss)
+            D_losses.append(d_loss_sum)
+            D_losses_avg.append(d_loss_avg)
             G_losses.append(g_loss)
-            R_Score.append(real_score)
-            F_Score.append(fake_score)
+            #R_Score.append(real_score)
+            #F_Score.append(fake_score)
 
             # Ausgabe EPOCH, Loss: G und D, Scores: Real und Fake
-            print("Epoch [{}/{}], loss_g: {:.4f}, loss_d: {:.4f}, real_score: {:.4f}, fake_score: {:.4f}".format(
-                epoch+1, num_epochs, g_loss, d_loss, real_score, fake_score))
+            print("Epoch [{}/{}], loss_g: {:.4f}, loss_d: {:.4f}, loss_d_avf: {:.4f}".format(
+                epoch+1, num_epochs, g_loss, d_loss_sum, d_loss_avg))
 
             # Speichern der generierten Samples/ Images
             train_DCGAN.saves_gen_samples(
                 g_img, epoch+start_idx, random_Tensor)
 
-        return G_losses, D_losses, R_Score, F_Score
+        PATH_Disc= "./model/Discriminator.tar"
+        PATH_Gen= "./model/Gnerator.tar"
+
+        torch.save(NN_Discriminator.state_dict(), PATH_Disc)
+        torch.save(NN_Generator.state_dict(), PATH_Gen)
+
+        return G_losses, D_losses # R_Score, F_Score
 
 
 # Train DCGAN with State-of-the-Art-Regularizationmethod

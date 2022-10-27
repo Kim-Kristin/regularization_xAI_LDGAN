@@ -28,5 +28,5 @@ import weightinit
 NN_Generator = NN_Generator().to(device.device)
 NN_Discriminator = NN_Discriminator().to(device.device)
 
-G_losses, D_losses, R_Score, F_Score =train_DCGAN.training(NN_Discriminator, NN_Generator,  dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, True)
+G_losses, D_losses =train_DCGAN.training(NN_Discriminator, NN_Generator, param.limited, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, True)
 
