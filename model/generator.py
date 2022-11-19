@@ -29,7 +29,9 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
             # state size. (ngf*2) x 16 x 16
             nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ngf),
-            nn.ReLU(True),
+            nn.ReLU(True))
+
+        self.out = nn.Sequential(
             # state size. (ngf) x 32 x 32
             nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False),
             nn.Tanh()
@@ -39,6 +41,7 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
     def forward(self, input):
         """ overrides the __call__ method of the generator """
         output = self.input_layer(input)
+        output = self.out(output)
         """output = self.hidden1(output)
         output = self.hidden2(output)
         output = self.out(output)"""

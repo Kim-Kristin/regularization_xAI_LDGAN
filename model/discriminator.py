@@ -30,17 +30,22 @@ class DiscriminatorNetCifar10(torch.nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
             nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+        )
+
+        self.output_layer = nn.Sequential(
             nn.Sigmoid()
             #nn.Softmax()
         )
 
-    def forward(self, input):
+    def forward(self, input, WGAN_param):
         """ overrides the __call__ method of the discriminator """
-        output = self.input_layer(input)
-        """output = self.hidden1(output)
-        output = self.hidden2(output)
-        output = self.hidden3(output)
-        output = self.out(output)"""
+
+        if WGAN_param == 0:
+            output = self.input_layer(input)
+            output = self.output_layer(output)
+        else:
+            output = self.input_layer(input)
+
         return output.view(-1, 1).squeeze(1)
 
 
