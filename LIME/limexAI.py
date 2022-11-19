@@ -41,15 +41,25 @@ def get_explanation(generated_data, discriminator, prediction, device, trained_d
     '''
 
     # initialize temp values to all 1s
+    # initialize temp values to all 1s
     temp = values_target(size=generated_data.size(), value=1.0, device=device)
 
     # mask values with low prediction
     mask = (prediction < 0.5).view(-1)
-    indices = (mask.nonzero(as_tuple=False)).cpu().numpy().flatten().tolist() #.detach().cpu().numpy().flatten().tolist()
-    print("Indices:", indices)
+    indices = (mask.nonzero(as_tuple=False)).detach().cpu().numpy().flatten().tolist()
+    print ("LENGTH INDICES ", indices)
+
     data = generated_data[mask, :]
+    print ("trained data size ", trained_data.size())
+    print ("data size ", data.unsqueeze(0).size())
+    print ("indices size ", len(indices))
+    #exit(0)
+
 
     if len(indices) > 1:
+
+        print("Explanation with LIME")
+
         explainer = lime_image.LimeImageExplainer()
         global discriminatorLime
         discriminatorLime = deepcopy(discriminator)
@@ -61,10 +71,10 @@ def get_explanation(generated_data, discriminator, prediction, device, trained_d
             tmp = np.reshape(tmp, (64, 64, 3)).astype(np.double)
             #tmp =
             exp = explainer.explain_instance(tmp, batch_predict_cifar, num_samples=100)
-        temp[indices[i], :] = torch.tensor(mask) #.astype(np.float))
+            temp[indices[i], :] = torch.tensor(mask) #.astype(np.float))
         del discriminatorLime
-    #else:
-    #    raise Exception("wrong xAI type given")
+    else:
+        raise Exception("wrong xAI type given")
 
     if device == "mps" or device == "cuda":
         temp = temp.to(device)
