@@ -5,6 +5,12 @@ import device
 # Root directory for dataset
 dataroot = "data/"
 
+# choice between gradient scaling=1 and gradient clipping=2
+choice_gc_gs = 2
+
+# Number Iteration for Critic (Discriminator)
+N_CRTIC = 5
+
 # Limitierung des Discriminators =True
 limited=True
 
