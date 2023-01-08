@@ -11,6 +11,8 @@ choice_gc_gs = 2
 # Number Iteration for Critic (Discriminator)
 N_CRTIC = 5
 
+WEIGHT_CLIP = 0.01
+
 # Limitierung des Discriminators =True
 limited=True
 
@@ -57,7 +59,6 @@ torch.manual_seed(randomseed)
 
 #Random Tensor
 random_Tensor = torch.randn(batch_size, latent_size, 1, 1, device= device.device)
-
 
 # Split
 
