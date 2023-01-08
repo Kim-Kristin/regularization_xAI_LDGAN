@@ -162,6 +162,7 @@ print(' '.join(f'{classes[labels[j]]:5s}' for j in range(param.batch_size)))
 
 # Dataloader auf dem verfügbaren Device
 train_loader = device.DeviceDataLoader(train_dataloader_CIFAR10, device.device)
+test_loader = device.DeviceDataLoader(test_dataloader_CIFAR10, device.device)
 
 # https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
 """for i, data in enumerate(train_loader):
