@@ -13,11 +13,16 @@ class DiscriminatorNetCifar10(torch.nn.Module):
         nc, ndf = 3, 64
 
         self.VanGAN = nn.Sequential(
-            nn.Linear(nc*ndf*ndf, 256, bias=False),
-            nn.Linear(256, 256, bias=False),
-            nn.Linear(256, 256, bias=False),
-            nn.Linear(256, 256, bias=False),
-            nn.Linear(256, 1, bias=False),
+            # input is (nc) x 64 x 64
+            nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
+            # state size. (ndf) x 32 x 32
+            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
+            # state size. (ndf*2) x 16 x 16
+            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
+            # state size. (ndf*4) x 8 x 8
+            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
+            # state size. (ndf*8) x 4 x 4
+            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
@@ -48,13 +53,16 @@ class DiscriminatorNetCifar10(torch.nn.Module):
 
     def forward(self, input, GAN_param):
         """ overrides the __call__ method of the discriminator """
-        # GAN_param == 0 - DCGAN ; GAN_param=1 - Vanilla GAN - GAN_param=2 WGAN
+        # GAN_param == 0 - DCGAN (Vanilla GAN)
+        # GAN_param=1 - DCGAN with Normalization and Activationfunction
+        # GAN_param=2 WGAN
+
         if GAN_param == 0:
+            #output =  input.view(input.size(0), -1)
+            output = self.VanGAN(input)
+        elif GAN_param == 1:
             output = self.input_layer(input)
             output = self.output_layer(output)
-        elif GAN_param == 1:
-            output = input.view(-1, 3*64*64)
-            output = self.VanGAN(output)
         elif GAN_param == 2:
             output = self.input_layer(input)
 
