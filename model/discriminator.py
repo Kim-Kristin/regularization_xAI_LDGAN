@@ -12,6 +12,15 @@ class DiscriminatorNetCifar10(torch.nn.Module):
         self.n_features = (3, 32, 32)
         nc, ndf = 3, 64
 
+        self.VanGAN = nn.Sequential(
+            nn.Linear(nc*ndf*ndf, 256, bias=False),
+            nn.Linear(256, 256, bias=False),
+            nn.Linear(256, 256, bias=False),
+            nn.Linear(256, 256, bias=False),
+            nn.Linear(256, 1, bias=False),
+            nn.Sigmoid()
+        )
+
         self.input_layer = nn.Sequential(
             # input is (nc) x 64 x 64
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
@@ -37,13 +46,16 @@ class DiscriminatorNetCifar10(torch.nn.Module):
             #nn.Softmax()
         )
 
-    def forward(self, input, WGAN_param):
+    def forward(self, input, GAN_param):
         """ overrides the __call__ method of the discriminator """
-
-        if WGAN_param == 0:
+        # GAN_param == 0 - DCGAN ; GAN_param=1 - Vanilla GAN - GAN_param=2 WGAN
+        if GAN_param == 0:
             output = self.input_layer(input)
             output = self.output_layer(output)
-        else:
+        elif GAN_param == 1:
+            output = input.view(-1, 3*64*64)
+            output = self.VanGAN(output)
+        elif GAN_param == 2:
             output = self.input_layer(input)
 
         return output.view(-1, 1).squeeze(1)

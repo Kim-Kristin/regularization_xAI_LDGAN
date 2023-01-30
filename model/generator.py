@@ -13,6 +13,14 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
         self.n_out = (3, 32, 32)
         nc, nz, ngf = 3, 100, 64
 
+        self.VanGAN = nn.Sequential(
+            nn.Linear(nz, ngf*8),
+            nn.Linear(ngf*8, ngf*4),
+            nn.Linear(ngf*4, ngf*2),
+            nn.Linear(ngf*2, ngf),
+            nn.Linear(ngf*8, nc),
+            nn.Tanh()
+        )
         self.input_layer = nn.Sequential(
             # input is Z, going into a convolution
             nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False),
@@ -38,15 +46,16 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
             # state size. (nc) x 64 x 64
         )
 
-    def forward(self, input):
+    def forward(self, input, GAN_param):
         """ overrides the __call__ method of the generator """
-        output = self.input_layer(input)
-        output = self.out(output)
-        """output = self.hidden1(output)
-        output = self.hidden2(output)
-        output = self.out(output)"""
+        if GAN_param == 0:
+            output = self.VanGAN(input)
+        else:
+            output = self.input_layer(input)
+            output = self.out(output)
+
         return output
 
 
-#generator = GeneratorNetworkCIFAR10()
+generator = GeneratorNetworkCIFAR10()
 #summary(generator, (100, 32, 32))
