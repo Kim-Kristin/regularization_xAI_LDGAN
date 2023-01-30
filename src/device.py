@@ -1,8 +1,6 @@
 import torch
 
 # Nutzen der GPU wenn vorhanden, ansonsten CPU
-
-
 def get_default_device():
     # if torch.has_mps:
     #    return torch.device("mps")
