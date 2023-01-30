@@ -50,6 +50,9 @@ model = model.to(device.device)
 '''Normalization'''
 G_loss_Norm, D_loss_Norm, FID_Norm = train_GAN.train_GAN_Normalization(NN_Generator, NN_Discriminator, model, dataloader.train_loader, weightinit.w_initial, param.lr, param.num_epochs, param.batch_size, param.random_Tensor, device.device)
 
-    #testDCGAN = FID("./state_save/DCGAN.tar", NN_Generator, dataloader.test_loader, device.device, param.random_Tensor)
+'''Different Losses'''
+#G_loss_DiffLoss, D_loss_DiffLoss, FID_DiffLoss = train_GAN.train_GAN_with_diffrent_Losses(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial)
 
-    # G_losses, D_losses =train_DCGAN.training(NN_Discriminator, NN_Generator, param.limited, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, True)
+#testDCGAN = FID("./state_save/DCGAN.tar", NN_Generator, dataloader.test_loader, device.device, param.random_Tensor)
+
+# G_losses, D_losses =train_DCGAN.training(NN_Discriminator, NN_Generator, param.limited, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, True)
