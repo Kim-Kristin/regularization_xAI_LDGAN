@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 
 
-def test_gan(NN_Generator, model, device, random_Tensor):
+def test_gan(NN_Generator, model, device, random_Tensor,reg_model):
     print("Testing start")
     NN_Generator.eval()
     FID_scores_test = []
@@ -32,7 +32,7 @@ def test_gan(NN_Generator, model, device, random_Tensor):
             # Generierung von Fake-Images
             fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
             saves_gen_samples(
-                fake_img, iters, random_Tensor,  dir_gen_samples = './outputs/fake')
+                fake_img, iters, random_Tensor,  dir_gen_samples = './outputs/fake/'+reg_model)
             CalcFID.testloop(NN_Generator, param.g_features, param.latent_size, img_list, device, GAN_param=0)
             iters += 1
             fretchet_dist_test =  CalcFID.calculate_fretchet(input,fake_img,model, device=device) #calc FID
