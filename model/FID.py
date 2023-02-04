@@ -33,7 +33,7 @@ import torchvision.utils as vutils
 
 class CalcFID():
   # https://machinelearningmastery.com/how-to-implement-the-frechet-inception-distance-fid-from-scratch/
-  def calculate_activation_statistics(images,model,device,batch_size=128, dims=2048):
+  def calculate_activation_statistics(images,model, device,batch_size=128, dims=2048):
       model.eval() #Set State of the Model Evaluate (Not Training)
       act=np.empty((len(images), dims))
 
@@ -89,7 +89,7 @@ class CalcFID():
 
   def calculate_fretchet(images_real,images_fake,model, device):
       mu_1,std_1=CalcFID.calculate_activation_statistics(images_real,model,device)
-      mu_2,std_2=CalcFID.calculate_activation_statistics(images_fake,model,device)
+      mu_2,std_2=CalcFID.calculate_activation_statistics(images_fake,model, device)
 
       """get fretched distance"""
       fid_value = CalcFID.calculate_frechet_distance(mu_1, std_1, mu_2, std_2)
@@ -128,3 +128,12 @@ class CalcFID():
         img_list.append(vutils.make_grid(fake_display, padding=2, normalize=True))
 
     iters += i
+
+  def testloop(netG, ngf, nz, img_list, device, GAN_param):
+        # Check how the generator is doing by saving G's output on fixed_noise
+    #if (iters % 500 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+    with torch.no_grad():
+        fixed_noise = torch.randn(ngf, nz, 1, 1, device=device)
+        fake_display = netG(fixed_noise, GAN_param).detach().cpu()
+    img_list.append(vutils.make_grid(fake_display, padding=2, normalize=True))
+
