@@ -128,30 +128,38 @@ def project_main ():
 
     elif user_input == 10:
         cls()
-        print("### State of Metrics ###")
+        print("### !!!MAKE SURE THAT TRAINING STATE IS SAVED!!! - State of Metrics ###")
         print("### Vanilla DCGAN ###")
         output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        print(output)
 
         print("### Gradient Penalty ###")
         output = torch.load("./outputs/metrics/_GP_GAN_Checkpoint.pth")
+        print(output)
 
         print("### Weight Clipping ###")
-        output = torch.load("./outputs/metrics/_Clipping_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_Clipping_GAN_Checkpoint.pth") #, map_location='cpu')
+        print(output)
 
         print("### Weight Penalty ###")
         output = torch.load("./outputs/metrics/_WP_GAN_Checkpoint.pth")
+        print(output)
 
         print("### Imbalanced Training ###")
         output = torch.load("./outputs/metrics/_IT_GAN_Checkpoint.pth")
+        print(output)
 
         print("### Layer Output Normalization ###")
         output = torch.load("./outputs/metrics/_LN_GAN_Checkpoint.pth")
+        print(output)
 
         print("### Different Losses for D and G ###")
         output = torch.load("./outputs/metrics/_DiffLoss_GAN_Checkpoint.pth")
+        print(output)
 
         print("### LDGAN ###")
         output = torch.load("./outputs/metrics/_LDGAN_Checkpoint.pth")
+        print(output)
 
 project_main()
 
