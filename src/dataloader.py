@@ -30,7 +30,7 @@ import torchvision.transforms as transforms
 import param
 
 
-def dataloader(dataset, BATCH_SIZE, split_aufteilung, display_informations=False, num_of_worker=param.num_workers, random_seed=param.randomseed):
+def dataloader(dataset, BATCH_SIZE, split_aufteilung, display_informations=True, num_of_worker=param.num_workers, random_seed=param.randomseed):
     torch.backends.cudnn.enabled = True
     torch.manual_seed(random_seed)
     # calculate lengths per dataset without consideration Split_Aufteilung
@@ -39,6 +39,7 @@ def dataloader(dataset, BATCH_SIZE, split_aufteilung, display_informations=False
     r = 0
 
     for i in range(len(lengths)):
+        #print(len(lengths))
         r_tmp = lengths[i] % 3  # Value an der Stelle i modulo 3
         lengths[i] = lengths[i] - r_tmp
         r += r_tmp
