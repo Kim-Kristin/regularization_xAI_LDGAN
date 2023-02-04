@@ -2,9 +2,9 @@ import torch
 
 # Nutzen der GPU wenn vorhanden, ansonsten CPU
 def get_default_device():
-    #if torch.backends.mps.is_available():
-    #   return torch.device("mps")
-    if torch.cuda.is_available():     # Wenn cuda verfügbar dann:
+    if torch.backends.mps.is_available():
+       return torch.device("mps")
+    elif torch.cuda.is_available():     # Wenn cuda verfügbar dann:
         return torch.device('cuda')   # Nutze Device = Cuda (=GPU)
     else:                         # Ansonsten
         return torch.device('cpu')    # Nutze Device = CPU
