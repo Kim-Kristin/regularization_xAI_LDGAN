@@ -65,6 +65,9 @@ def project_main ():
     print("8. xAI GAN")
     print("9. LDGAN")
 
+    print("##########")
+    print("10. Call Checkpoints (Metrics - Losses and FID) of all Models")
+    print("##########")
 
     user_input = int(input("Regularisierungs-Model:"))
     if user_input == 0:
@@ -130,25 +133,25 @@ def project_main ():
         output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
 
         print("### Gradient Penalty ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_GP_GAN_Checkpoint.pth")
 
         print("### Weight Clipping ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_Clipping_GAN_Checkpoint.pth")
 
         print("### Weight Penalty ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
-
-        print("### Layer Output Normalization ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_WP_GAN_Checkpoint.pth")
 
         print("### Imbalanced Training ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_IT_GAN_Checkpoint.pth")
+
+        print("### Layer Output Normalization ###")
+        output = torch.load("./outputs/metrics/_LN_GAN_Checkpoint.pth")
 
         print("### Different Losses for D and G ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_DiffLoss_GAN_Checkpoint.pth")
 
         print("### LDGAN ###")
-        output = torch.load("./outputs/metrics/_Van_GAN_Checkpoint.pth")
+        output = torch.load("./outputs/metrics/_LDGAN_Checkpoint.pth")
 
 project_main()
 
