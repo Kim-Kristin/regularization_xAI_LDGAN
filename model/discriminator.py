@@ -67,7 +67,3 @@ class DiscriminatorNetCifar10(torch.nn.Module):
             output = self.input_layer(input)
 
         return output.view(-1, 1).squeeze(1)
-
-
-#discrimniator = DiscriminatorNetCifar10()
-

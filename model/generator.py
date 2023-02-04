@@ -52,8 +52,6 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
 
     def forward(self, input, GAN_param):
         """ overrides the __call__ method of the generator """
-        # GAN_param == 0 - DCGAN (Vanilla GAN)
-        # GAN_param=1 - DCGAN with Normalization and Activationfunction
         if GAN_param == 0:
             #output =  input.view(input.size(0), -1)
             output = self.VanGAN(input)
@@ -62,7 +60,3 @@ class GeneratorNetworkCIFAR10(torch.nn.Module):
             output = self.out(output)
 
         return output
-
-
-#generator = GeneratorNetworkCIFAR10()
-#summary(generator, (100, 32, 32))
