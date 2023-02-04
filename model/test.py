@@ -1,89 +1,68 @@
+# APEGAN - test class
+import sys
 import numpy as np
+sys.path.append('./src/param')
+sys.path.append('./mode/FID')
+sys.path.append('./model/train')
+
+import dataloader
+import device
 import torch
 from torch.autograd import Variable
-#from torchvision.models import inception_v3
-import generator
-import discriminator
+from generator import GeneratorNetworkCIFAR10 as NN_Generator
+import param
+from FID import CalcFID
 from tqdm import tqdm
-
-# First, we'll define a function for generating a batch of fake images
-def generate_fake_images(generator,random_Tensor, device): # latent_dim, n_images, device):
-  # Sample random points in the latent space
-  random_latent_vectors = random_Tensor #torch.randn(n_images, latent_dim).to(device)
-
-  # Decode them to fake images
-  fake_images = generator(random_latent_vectors)
-
-  return fake_images.detach().cpu().numpy()
-
-# Next, we'll define a function for calculating the FID
-def calculate_fid(real_images, fake_images, G, device):
-  # Calculate the Inception Score of the real and fake images
-  real_inception_score = get_inception_score(real_images, G, device)
-  fake_inception_score = get_inception_score(fake_images, G, device)
-
-  # Calculate the FID
-  fid = (real_inception_score[1] + np.square(real_inception_score[0] - fake_inception_score[0]))
-
-  return fid
-
-# We'll also define a function for calculating the Inception Score
-def get_inception_score(images, G, device):
-      # Load the Inception model
-  inception_model = G.to(device)
-  inception_model.eval()
-
-  # Transform the images to tensors and feed them through the model
-  images = (images * 255).astype(np.uint8)
-  images = torch.from_numpy(images).to(device)
-  images = Variable(images, requires_grad=False)
-  with torch.no_grad():
-    logits = inception_model(images)
-  probs = torch.nn.functional.softmax(logits, dim=-1).cpu().numpy()
-
-  # Calculate the mean and standard deviation of the predicted class probabilities
-  mean = np.mean(probs, axis=0)
-  std = np.std(probs, axis=0)
-
-  return mean, std
+import os
+from torchvision.utils import save_image  # Speichern von Bildern
+import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
 
 
-def test(gan_path, Generator, testloader, device, input_channel, random_Tensor, batchsize): #latent_dim, n_images=10000):
-    test_loader = testloader
+def test_gan(NN_Generator, model, device, random_Tensor):
+    print("Testing start")
+    NN_Generator.eval()
+    FID_scores_test = []
+    img_list = []
+    iters = 0
+    with torch.no_grad():
+        for i, data in enumerate(dataloader.test_loader, 0):
+            input, label = data
+            input.to(device)
+            # Generierung von Fake-Images
+            fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
+            saves_gen_samples(
+                fake_img, iters, random_Tensor,  dir_gen_samples = './outputs/fake')
+            CalcFID.testloop(NN_Generator, param.g_features, param.latent_size, img_list, device, GAN_param=0)
+            iters += 1
+            fretchet_dist_test =  CalcFID.calculate_fretchet(input,fake_img,model, device=device) #calc FID
+            FID_scores_test.append(fretchet_dist_test.item())
+            break
+    return FID_scores_test
 
-    gan_point = torch.load(gan_path)
-    #model = upgraded_net.simple_net_upgraded(input_channel, classes).to(device)
-    G = Generator(input_channel).to(device)
-    G.load_state_dict(gan_point["generator"])
-    G.eval()
+def tensor_norm(img_tensors):
+    # print (img_tensors)
+    # print (img_tensors * NORM [1][0] + NORM [0][0])
+    return img_tensors * param.NORM[1][0] + param.NORM[0][0]
 
-    # Test model
-    print("Start testing...")
-    fake_images = generate_fake_images(G, random_Tensor, device) #latent_dim, n_images)
+def show_images(images, nmax=64):
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.title("Fake_Images")
+    ax.imshow(make_grid(tensor_norm(images.detach()[:nmax]), nrow=8).permute(
+        1, 2, 0).cpu())  # detach() : erstellt eine neue "Ansicht",
+    # sodass diese Operationen nicht mehr verfolgt werden,
+    # d. h. der Gradient wird nicht berechnet und der Untergraph
+    # wird nicht aufgezeichnet > Speicher wird nicht verwendet
 
-    real_images = np.array([np.array(image.resize((batchsize, batchsize))) for image in real_images])
-    # Calculate the FID
-    fid = calculate_fid(real_images, fake_images, G, device)
-    print(f"FID: {fid:.2f}")
-
-
-    """for input, label in tqdm(test_loader, total=len(test_loader), leave=False):
-        input, label = Variable(input.to(device)), Variable(label.to(device))
-
-        normal_acc = attack_and_eval.evaluation(fmodel, input, label)
-
-        input_adv, _, success = attack(fmodel, input , label, epsilons=eps)
-
-        adv_acc = attack_and_eval.evaluation(fmodel, input_adv, label)
-
-        input_ape = G(input_adv)
-
-        ape_acc = attack_and_eval.evaluation(fmodel, input_ape, label)
-        n += label.size(0)
-    print("Accuracy: normal {:.6f}".format(
-        normal_acc / n * 100))
-    print("Accuracy: " + str(attack_name) + " {:.6f}".format(
-        adv_acc / n * 100))
-    print("Accuracy: APEGAN {:.6f}".format(
-        ape_acc / n * 100))x<
-"""
+def saves_gen_samples(gen_img, idx, random_Tensor, dir_gen_samples):
+    # Randomisierter Tensor wird an den Generator übergeben
+    fake_img_name = "gen_img-{0:0=4d}.png".format(idx)
+    os.makedirs(dir_gen_samples, exist_ok=True)
+    # os.makedirs(dir_gen_samples,exist_ok=True)# Setzen von Bildbezeichnungen für die Fake_Images
+    # Tensor-Normalisierung; Speichern der Fake_Images im Ordner "Outputs/dir_gen_samples/"
+    save_image(tensor_norm(gen_img), os.path.join(
+        dir_gen_samples, fake_img_name), nrow=8)
+    show_images(gen_img)  # Plotten der Fake_Images
+    print("Gespeichert")
