@@ -28,7 +28,7 @@ g_features = 64
 # Size of feature maps in discriminator
 d_features = 64
 # Number of training epochs
-num_epochs = 2
+num_epochs = 10
 # Learning rate for optimizers
 lr = 0.0002
 # Beta1 hyperparam for Adam optimizers
@@ -46,8 +46,8 @@ random_Tensor = torch.randn(batch_size, latent_size, 1, 1, device= device.device
 
 # Split
 # Train, Validation, Test
-TEST_SPLIT = 0.1
-VALID_SPLIT = 0.8
+TEST_SPLIT = 0.2
+VALID_SPLIT = 0.0
 TRAIN_SPLIT = (1-(TEST_SPLIT+VALID_SPLIT))
 
 SPLIT_AUFTEILUNG = {TRAIN_SPLIT, VALID_SPLIT, TEST_SPLIT}
