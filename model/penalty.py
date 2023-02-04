@@ -7,8 +7,11 @@ def compute_gradient_penalty(D, real_samples, fake_samples, device):
     alpha = torch.rand(real_samples.size(0), 1, 1, 1).to(device)
     # Get random interpolation between real and fake samples
     interpolates = (alpha * real_samples + ((1 - alpha) * fake_samples)).requires_grad_(True).to(device)
-    d_interpolates = D(interpolates)
-    fake = torch.ones(real_samples.size(0), 1).requires_grad_(False).to(device)
+    d_interpolates = D(interpolates, GAN_param=0).to(device)
+    #print(d_interpolates.shape)
+    fake = torch.ones(real_samples.size(0), 1).requires_grad_(False)
+    fake = torch.flatten(fake)
+    #print(fake.shape)
     # Get gradient w.r.t. interpolates
     gradients = torch.autograd.grad(
         outputs=d_interpolates,
