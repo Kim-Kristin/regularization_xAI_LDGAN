@@ -19,7 +19,7 @@ global values
 global discriminatorLime
 
 
-def get_explanation(generated_data, discriminator, prediction, device, trained_data=None):
+def get_explanation(generated_data, discriminator, prediction, device,trained_data=None):
     '''
     This function calculates the explanation for given generated images using the desired xAI systems and the
     :param generated_data: data created by the generator
@@ -41,18 +41,19 @@ def get_explanation(generated_data, discriminator, prediction, device, trained_d
     '''
 
     # initialize temp values to all 1s
-    # initialize temp values to all 1s
     temp = values_target(size=generated_data.size(), value=1.0, device=device)
-
+    #print("pred", prediction)
     # mask values with low prediction
     mask = (prediction < 0.5).view(-1)
     indices = (mask.nonzero(as_tuple=False)).detach().cpu().numpy().flatten().tolist()
-    print ("LENGTH INDICES ", indices)
+    #print ("LENGTH INDICES ", indices)
+    #print("Mask", mask)
 
     data = generated_data[mask, :]
-    print ("trained data size ", trained_data.size())
-    print ("data size ", data.unsqueeze(0).size())
-    print ("indices size ", len(indices))
+    data.to(device)
+    #print ("trained data size ", trained_data.size())
+    #print ("data size ", data.unsqueeze(0).size())
+    #print ("indices size ", len(indices))
     #exit(0)
 
 
@@ -71,10 +72,8 @@ def get_explanation(generated_data, discriminator, prediction, device, trained_d
             tmp = np.reshape(tmp, (64, 64, 3)).astype(np.double)
             #tmp =
             exp = explainer.explain_instance(tmp, batch_predict_cifar, num_samples=100)
-            temp[indices[i], :] = torch.tensor(mask) #.astype(np.float))
+            temp[indices[i], :] = mask.clone().detach() #torch.tensor(mask) #.astype(np.float))
         del discriminatorLime
-    else:
-        raise Exception("wrong xAI type given")
 
     if device == "mps" or device == "cuda":
         temp = temp.to(device)
@@ -121,7 +120,7 @@ def batch_predict_cifar(images):
     # stack up all images
     images = np.transpose(images, (0, 3, 1, 2))
     batch = torch.stack([i for i in torch.Tensor(images)], dim=0)
-    logits = discriminatorLime(batch)
+    logits = discriminatorLime(batch, GAN_param=1)
     probs = F.softmax(logits, dim=0).view(-1).unsqueeze(1)
     return probs.detach().numpy()
 
