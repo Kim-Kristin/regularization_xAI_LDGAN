@@ -141,9 +141,9 @@ def project_main ():
         output = torch.load("./outputs/metrics/_Clipping_GAN_Checkpoint.pth") #, map_location='cpu')
         print(output)
 
-        print("### Weight Penalty ###")
-        output = torch.load("./outputs/metrics/_WP_GAN_Checkpoint.pth")
-        print(output)
+        #print("### Weight Penalty ###")
+        #output = torch.load("./outputs/metrics/_WP_GAN_Checkpoint.pth")
+        #print(output)
 
         print("### Imbalanced Training ###")
         output = torch.load("./outputs/metrics/_IT_GAN_Checkpoint.pth")
