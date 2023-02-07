@@ -28,7 +28,7 @@ g_features = 64
 # Size of feature maps in discriminator
 d_features = 64
 # Number of training epochs
-num_epochs = 10
+num_epochs = 5 # 5 epochs  because of Compute costs
 # Learning rate for optimizers
 lr = 0.0002
 # Beta1 hyperparam for Adam optimizers
@@ -38,7 +38,6 @@ NORM = (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
 # Set random seed for reproducibility
 randomseed = 999
 # manualSeed = random.randint(1, 10000) # use if you want new results
-#print("Random Seed: ", randomseed)
 random.seed(randomseed)
 torch.manual_seed(randomseed)
 #Random Tensor
