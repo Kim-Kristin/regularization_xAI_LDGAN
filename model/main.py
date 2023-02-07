@@ -74,8 +74,8 @@ def project_main ():
         cls()
         G_loss, D_loss, FID, FID_test = train_GAN.train_DCGAN(NN_Discriminator, NN_Generator, model , dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial)
         GPG_loss, GPD_loss, GP_FID, FID_test_gp = train_GAN.train_GAN_with_GP(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, weightinit.w_initial)
-        ClipG_loss, ClipD_loss, ClipFID, FID_test_clip = train_GAN.train_GAN_with_WP_Normalization(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.choice_gc_gs, start_idx=1)
-        G_loss_WP, D_loss_WP, FID_WP, FID_test_WP = train_GAN.train_GAN_with_WP(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.g_features, param.latent_size)
+        ClipG_loss, ClipD_loss, ClipFID, FID_test_clip = train_GAN.train_GAN_with_WP_Normalization(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, weightinit.w_initial, param.N_CRTIC)
+        #G_loss_WP, D_loss_WP, FID_WP, FID_test_WP = train_GAN.train_GAN_with_WP(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.g_features, param.latent_size)
         G_loss_IT, D_loss_IT, FID_IT, FID_test_IT = train_GAN.train_GAN_Imbalanced(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.N_CRTIC)
         G_loss_diffLoss, D_loss_diffLoss, FID_diffLoss, FID_test_diff = train_GAN.train_GAN_with_diffrent_Losses(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial)
         G_loss_LN, D_loss_LN, FID_LN, FID_test_LN = train_GAN.train_GAN_Normalization(NN_Generator, NN_Discriminator, model, dataloader.train_loader,  weightinit.w_initial, param.lr, param.num_epochs, param.batch_size, param.random_Tensor, device.device)
@@ -96,12 +96,12 @@ def project_main ():
     elif user_input == 3:
         cls()
         #Clipping
-        ClipG_loss, ClipD_loss, ClipFID, FID_test_clip = train_GAN.train_GAN_with_WP_Normalization(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.choice_gc_gs)
+        ClipG_loss, ClipD_loss, ClipFID, FID_test_clip = train_GAN.train_GAN_with_WP_Normalization(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, weightinit.w_initial, param.N_CRTIC)
 
     elif user_input == 4:
         cls()
         #Weight Penalty
-        G_loss_WP, D_loss_WP, FID_WP, FID_test_WP = train_GAN.train_GAN_with_WP(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.g_features, param.latent_size)
+        #G_loss_WP, D_loss_WP, FID_WP, FID_test_WP = train_GAN.train_GAN_with_WP(NN_Discriminator, NN_Generator, model, dataloader.train_loader, param.random_Tensor, param.num_epochs, device.device, param.lr, param.batch_size, weightinit.w_initial, param.g_features, param.latent_size)
 
     elif user_input==5:
         cls()
