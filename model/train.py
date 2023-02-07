@@ -73,35 +73,15 @@ class train_GAN():
 
             print("Epoch:", epoch)
             # Iteration über die Bilder
-            for i, data in enumerate(train_loader, 0):
+            for i, data in tqdm(enumerate(train_loader, 0)):
 
                 img_real, label = data
                 #train_DCGAN.saves_gen_samples(img_real, epoch+start_idx, random_Tensor)
 
                 # Generierung von Fake-Images
                 fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
+                #print(fake_img.shape)
 
-                ##################
-                # Train Generator#
-                ##################
-
-                #Gradienten = 0
-                Gen_Opt.zero_grad()
-
-                # Übergeben der Fakes-Images an den Diskriminator (Versuch den Diskriminator zu täuschen)
-                pred_Gen = NN_Discriminator(fake_img, GAN_param=0)
-                target_Gen = torch.ones(batchsize, 1, device=device)
-                # Torch.ones gibt einen tensor zurück welcher nur den Wert 1 enthält, und dem Shape Size = BATCH_SIZE
-                target_Gen = torch.flatten(target_Gen)
-
-                #loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
-                criterion_Gen = nn.BCELoss()
-                loss_Gen = criterion_Gen(pred_Gen, target_Gen)
-                #print("loss_Gen:", loss_Gen)
-                loss_Gen.backward()
-
-                # Backprop./ Update der Gewichte des Generators
-                Gen_Opt.step()
 
                 ######################
                 # Train Discriminator#
@@ -147,6 +127,28 @@ class train_GAN():
                 loss_sum_Disc.backward()
                 Dis_Opt.step()
 
+                ##################
+                # Train Generator#
+                ##################
+
+                #Gradienten = 0
+                Gen_Opt.zero_grad()
+
+                # Übergeben der Fakes-Images an den Diskriminator (Versuch den Diskriminator zu täuschen)
+                pred_Gen = NN_Discriminator(fake_img, GAN_param=0)
+                target_Gen = torch.ones(batchsize, 1, device=device)
+                # Torch.ones gibt einen tensor zurück welcher nur den Wert 1 enthält, und dem Shape Size = BATCH_SIZE
+                target_Gen = torch.flatten(target_Gen)
+
+                #loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
+                criterion_Gen = nn.BCELoss()
+                loss_Gen = criterion_Gen(pred_Gen, target_Gen)
+                #print("loss_Gen:", loss_Gen)
+                loss_Gen.backward()
+
+                # Backprop./ Update der Gewichte des Generators
+                Gen_Opt.step()
+
                 CalcFID.trainloop(iters, epoch, num_epochs, i, NN_Generator, param.g_features, param.latent_size, img_list, device, train_loader, GAN_param=0)
                 # Count = i #Index/ Iterationen zählen
                 #print("index:", i, "D_loss:", d_loss,"G_Loss:", g_loss)
@@ -160,9 +162,6 @@ class train_GAN():
             fretchet_dist =  CalcFID.calculate_fretchet(img_real,fake_img,model, device=device) #calc FID
             FID_scores.append(fretchet_dist.item())
             plot.plot_FID(reg_model, FID_scores)
-
-            #Dis_scheduler.step()
-            #Gen_scheduler.step()
 
             #print loss(D, G) and FID
             print('[%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tFretchet_Distance: %.4f'
@@ -184,7 +183,7 @@ class train_GAN():
                 fake_img, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/VanillaGAN')
 
 
-        PATH_DCGAN= "./state_save/VanillaGAN.tar"
+        PATH_DCGAN= "./outputs/VanillaGAN.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict(), "FID": FID_scores},  PATH_DCGAN )
 
         FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
@@ -197,7 +196,7 @@ class train_GAN():
         # bei dem der interpolierte Wert zwischen einer realen Stichprobe und einer generierten Stichprobe verwendet wird
         #GP
 
-
+        torch.cuda.empty_cache()
         NN_Generator.apply(weights_init)
         NN_Discriminator.apply(weights_init)
         NN_Discriminator.train()
@@ -208,10 +207,11 @@ class train_GAN():
         img_list = []
         FID_scores = []
 
-        optimizer_G = optim.Adam(NN_Generator.parameters(), lr=lr, betas=(0.5, 0.999))
-        optimizer_D = optim.Adam(NN_Discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+        optimizer_G = optim.Adam(NN_Generator.parameters(), lr=lr, betas=(0.6, 0.999))
+        optimizer_D = optim.Adam(NN_Discriminator.parameters(), lr=lr, betas=(0.6, 0.999))
 
         iters=0
+        print("Starting Training with GAN GP")
         for epoch in range(num_epochs):
             print("Epoch:", epoch)
             for i, (real_imgs, _) in enumerate(train_loader):
@@ -219,7 +219,7 @@ class train_GAN():
                 # Sample random points in the latent space
                 random_latent_vectors = random_Tensor
 
-                # Decode them to fake images
+                """# Decode them to fake images
                 fake_imgs = NN_Generator(random_latent_vectors, GAN_param=0).to(device)
 
                 # Real images
@@ -230,7 +230,18 @@ class train_GAN():
                 # Train the discriminator
                 d_loss = -torch.mean(real_validity) + torch.mean(fake_validity)
                 gradient_penalty = penalty.compute_gradient_penalty(NN_Discriminator, real_imgs.data, fake_imgs.data, device=device)
-                d_loss += gradient_penalty_weight * gradient_penalty
+                d_loss += gradient_penalty_weight * gradient_penalty"""
+
+
+                fake_img = NN_Generator(random_latent_vectors, GAN_param=0)
+                critic_fake_pred = NN_Discriminator(fake_img, GAN_param=0).reshape(-1).to(device)
+                critic_real_pred = NN_Discriminator(real_imgs, GAN_param=0).reshape(-1).to(device)
+
+                # Berechnung: gradient penalty auf den realen and fake Images (Generiert durch Generator)
+                gp = penalty.compute_GAN_gradient_penalty(NN_Discriminator, real_imgs, fake_img, device)
+                d_loss = -(torch.mean(critic_real_pred) -
+                                    torch.mean(critic_fake_pred)) + gradient_penalty_weight * gp
+
 
                 optimizer_D.zero_grad()
                 d_loss.backward()
@@ -238,7 +249,7 @@ class train_GAN():
 
                 # Train the generator
                 fake_imgs = NN_Generator(random_latent_vectors, GAN_param=0).to(device)
-                fake_validity = NN_Discriminator(fake_imgs, GAN_param=0)
+                fake_validity = NN_Discriminator(fake_imgs, GAN_param=0).to(device)
                 g_loss = -torch.mean(fake_validity)
 
                 optimizer_G.zero_grad()
@@ -276,7 +287,7 @@ class train_GAN():
             train_GAN.saves_gen_samples(
                 fake_imgs, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/GradientPenaltyGAN')
 
-        PATH_GP= "./state_save/GAN_GP.tar"
+        PATH_GP= "./outputs/GAN_GP.tar"
 
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_GP )
 
@@ -285,7 +296,7 @@ class train_GAN():
 
         return G_losses_GP, D_losses_GP , FID_scores, FID_scores_test
 
-    def train_GAN_with_WP_Normalization(NN_Discriminator, NN_Generator, model, train_loader, random_Tensor, num_epochs, device, lr, batchsize, weights_init, choice_gc_gs,start_idx=1):
+    def train_GAN_with_WP_Normalization(NN_Discriminator, NN_Generator, model, train_loader, random_Tensor, num_epochs, device, lr, weights_init, N_Critic,start_idx=1):
         #Gewichtsnormalisierung
         #Weightclipping ==> Wasserstein GAN
         torch.cuda.empty_cache()  # leert den Cache, wenn auf der GPU gearbeitet wird
@@ -303,11 +314,11 @@ class train_GAN():
         img_list = []
         FID_scores = []
 
-
-        Gen_Opt = torch.optim.Adam(
-            NN_Generator.parameters(), lr=lr, betas=(0.6, 0.999))
-        Dis_Opt = torch.optim.Adam(
-            NN_Discriminator.parameters(), lr=lr, betas=(0.6, 0.999))
+        # Optimzer (=RMS Prop)
+        Gen_Opt = torch.optim.RMSprop(NN_Generator.parameters(),
+                                lr=0.00005)
+        Dis_Opt = torch.optim.RMSprop(NN_Discriminator.parameters(),
+                                lr=0.00005)
 
         iters=0
         # Iteration über die Epochen
@@ -315,89 +326,59 @@ class train_GAN():
 
             print("Epoch:", epoch)
             # Iteration über die Bilder
-            for i, data in enumerate(train_loader, 0):
+            for i, data in tqdm(enumerate(train_loader,0)):
+
 
                 img_real, label = data
                 #train_DCGAN.saves_gen_samples(img_real, epoch+start_idx, random_Tensor)
+                ######################
+                # Train Discriminator#
+                ######################
 
-                # Generierung von Fake-Images
-                fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
+                # Iteration über Anzahl Critic (=5)
+                for _ in range(N_Critic):
+                    Dis_Opt.zero_grad()
+                    # Trainieren des Diskrimniators
+                    fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
+                    # Reale Bilder werden an den Diskriminator übergeben
+                    pred_real = NN_Discriminator(img_real, GAN_param=2).to(device)
+                    # print(pred_real.size())
 
+                    # Fake Bilder werden an den Diskriminator übergeben
+                    pred_fake = NN_Discriminator(fake_img, GAN_param=2).to(device)
+
+                    # Berechnung des Loss
+                    loss_critic = -(torch.mean(pred_real)-torch.mean(pred_fake))
+
+                    # Backprop & Update Optimzer
+                    loss_critic.backward(retain_graph=True)
+                    Dis_Opt.step()
+
+                    # Weight Clipping (= 0.01) - Gesamtgradient des Diskriminators dadurch begrenzt, dass die einzelnen Gewichte im Diskriminator separat begrenzt werden.
+                    for p in NN_Discriminator.parameters():
+                        p.data.clamp_(-0.01, 0.01)
                 ##################
                 # Train Generator#
                 ##################
 
                 #Gradienten = 0
                 Gen_Opt.zero_grad()
+                fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
 
                 # Übergeben der Fakes-Images an den Diskriminator (Versuch den Diskriminator zu täuschen)
-                pred_Gen = NN_Discriminator(fake_img, GAN_param=0)
-                target_Gen = torch.ones(batchsize, 1, device=device)
-                # Torch.ones gibt einen tensor zurück welcher nur den Wert 1 enthält, und dem Shape Size = BATCH_SIZE
-                target_Gen = torch.flatten(target_Gen)
+                pred_Gen = NN_Discriminator(fake_img, GAN_param=2).to(device)
+                loss_Gen = -torch.mean(pred_Gen)
 
-                #loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
-                criterion_Gen = nn.BCELoss()
-                loss_Gen = criterion_Gen(pred_Gen, target_Gen)
                 #print("loss_Gen:", loss_Gen)
                 loss_Gen.backward()
 
                 # Backprop./ Update der Gewichte des Generators
                 Gen_Opt.step()
 
-                ######################
-                # Train Discriminator#
-                ######################
-
-                #d_loss_sum, d_loss_avg = train_DCGAN.train_discriminator(
-                # NN_Discriminator, NN_Generator, img_real, Dis_Opt, random_Tensor, limited, i, batchsize, trained_data, Gen_Opt, local_explainable, device)
-
-                #Gradienten = 0
-                Dis_Opt.zero_grad()
-
-                """
-                1. Trainieren des Diskriminators auf realen Bildern
-                """
-                # Reale Bilder werden an den Diskriminator übergeben
-                pred_real = NN_Discriminator(img_real, GAN_param=0).to(device)
-                #pred_real = torch.flatten(pred_real)
-
-                # Kennzeichnen der realen Bilder mit 1
-                target_real = torch.ones(img_real.size(0), 1, device=device)
-                target_real = torch.flatten(target_real)
-                # print(target_real.size())
-
-                # Berechnung des Losses mit realen Bildern
-                criterion_Disc = nn.BCELoss()
-                loss_real = criterion_Disc(pred_real, target_real)
-                #real_score = torch.mean(pred_real).item()
-
-                """
-                2. Trainieren des Diskriminators auf den erstellten Fake_Bildern
-                """
-                # Fake Bilder werden an den Diskriminator übergeben
-                pred_fake = NN_Discriminator(fake_img.detach(), GAN_param=0).to(device)
-
-                # Kennzeichnen der Fake-Bilder mit 0
-                target_fake = torch.zeros(fake_img.size(0), 1, device=device)
-                target_fake = torch.flatten(target_fake)
-                # Loss Function - Fehler des Fake-Batch wird berechnet
-                loss_fake = criterion_Disc(pred_fake, target_fake)
-                #fake_score = torch.mean(pred_fake).item()
-
-                loss_sum_Disc = loss_real + loss_fake
-                loss_sum_Disc.backward()
-                if choice_gc_gs == 1:
-                    torch.nn.utils.clip_grad_norm_(NN_Discriminator.parameters(), max_norm=2.0, norm_type=2)
-                else:
-                    torch.nn.utils.clip_grad_value_(NN_Discriminator.parameters(), clip_value=1.0)
-
-                Dis_Opt.step()
-
                 CalcFID.trainloop(iters, epoch, num_epochs, i, NN_Generator, param.g_features, param.latent_size, img_list, device, train_loader, GAN_param=0)
 
             # Speichern des Gesamtlosses von D und G und der Real und Fake Scores
-            D_losses.append(loss_sum_Disc.item())
+            D_losses.append(loss_critic.item())
             G_losses.append(loss_Gen.item())
             fretchet_dist =  CalcFID.calculate_fretchet(img_real,fake_img,model, device=device) #calc FID
             FID_scores.append(fretchet_dist.item())
@@ -420,13 +401,13 @@ class train_GAN():
             #print loss(D, G) and FID
             print('[%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tFretchet_Distance: %.4f'
                     % (epoch+1, num_epochs,
-                        loss_sum_Disc.item(), loss_Gen.item(),fretchet_dist))
+                        loss_critic.item(), loss_Gen.item(),fretchet_dist))
 
             # Speichern der generierten Samples/ Images
             train_GAN.saves_gen_samples(
                 fake_img, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/WeightClippingGAN')
 
-        PATH_WP_Norm= "./state_save/WP_Norm.tar"
+        PATH_WP_Norm= "./outputs/WP_Norm.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_WP_Norm )
 
         FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
@@ -434,7 +415,7 @@ class train_GAN():
 
         return G_losses, D_losses, FID_scores, FID_scores_test
 
-    def train_GAN_with_WP(NN_Discriminator, NN_Generator, model, train_loader, random_Tensor, num_epochs, device, lr, batch_size, weight_init, g_features, latent_size, start_idx=1):
+    """def train_GAN_with_WP(NN_Discriminator, NN_Generator, model, train_loader, random_Tensor, num_epochs, device, lr, batch_size, weight_init, g_features, latent_size, start_idx=1):
         # Gewichtsstrafe
         torch.cuda.empty_cache()
 
@@ -463,7 +444,7 @@ class train_GAN():
             for i, data in enumerate(train_loader):
                 img_real, label_real = data
 
-                """Train Discriminator"""
+                rain Discriminator
                 D_opt.zero_grad()
 
                 pred_real = NN_Discriminator(img_real, GAN_param=0).to(device)
@@ -497,7 +478,7 @@ class train_GAN():
                 d_loss.backward()
                 D_opt.step()
 
-                """Train Generator"""
+                Train Generator
 
                 G_opt.zero_grad()
 
@@ -547,18 +528,18 @@ class train_GAN():
             train_GAN.saves_gen_samples(
                 img_fake, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/WeightPenaltyGAN')
 
-        PATH_DCGAN= "./state_save/WP_GAN.tar"
+        PATH_DCGAN= "./outputs/WP_GAN.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict(), "FID": FID_scores},  PATH_DCGAN )
 
         FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
         print(FID_scores_test)
 
-        return {"Loss_G" : g_loss.item(), "Loss_D" : d_loss.item(), "FID" : FID_scores, "FID_test": FID_scores_test}
+        return {"Loss_G" : g_loss.item(), "Loss_D" : d_loss.item(), "FID" : FID_scores, "FID_test": FID_scores_test}"""
 
     def train_GAN_Imbalanced(NN_Discriminator, NN_Generator, model, train_loader, random_Tensor, num_epochs, device, lr, batchsize, weights_init, N_CRTIC, start_idx=1):
         LAMBDA_GP = 10  # Penalty Koeffizient
 
-        # WGAN
+        # WGAN with GP
         torch.cuda.empty_cache()  # leert den Cache, wenn auf der GPU gearbeitet wird
 
         NN_Generator.apply(weights_init)
@@ -575,10 +556,10 @@ class train_GAN():
         FID_scores = []
 
         #Optimizer
-        Gen_Opt = torch.optim.RMSprop(NN_Generator.parameters(),
-                              lr=lr)
-        critic_Opt = torch.optim.RMSprop(NN_Discriminator.parameters(),
-                              lr=lr)
+        Gen_Opt = torch.optim.Adam(
+            NN_Generator.parameters(), lr=1e-4, betas=(0, 0.9))
+        critic_Opt = torch.optim.Adam(
+            NN_Discriminator.parameters(), lr=1e-4, betas=(0, 0.9))
 
         iters = 0
         # Iteration über die Epochen
@@ -596,9 +577,9 @@ class train_GAN():
                     """
                     1. Trainieren des Diskriminators auf realen Bildern
                     """
-                    fake_img = NN_Generator(random_Tensor, GAN_param=0)
-                    critic_fake_pred = NN_Discriminator(fake_img, GAN_param=0).reshape(-1)
-                    critic_real_pred = NN_Discriminator(img_real, GAN_param=0).reshape(-1)
+                    fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
+                    critic_fake_pred = NN_Discriminator(fake_img, GAN_param=2).reshape(-1).to(device)
+                    critic_real_pred = NN_Discriminator(img_real, GAN_param=2).reshape(-1).to(device)
 
                     # Berechnung: gradient penalty auf den realen and fake Images (Generiert durch Generator)
                     gp = penalty.compute_gradient_penalty(NN_Discriminator, img_real, fake_img, device)
@@ -614,10 +595,8 @@ class train_GAN():
                     # Update Optimizer
                     critic_Opt.step()
 
-
-
-                        # Trainieren des Generators: max E[critic(gen_fake)] <-> min -E[critic(gen_fake)]
-                gen_fake = NN_Discriminator(fake_img, GAN_param=0).reshape(-1)
+                # Trainieren des Generators: max E[critic(gen_fake)] <-> min -E[critic(gen_fake)]
+                gen_fake = NN_Discriminator(fake_img, GAN_param=2).reshape(-1)
                 gen_loss = -torch.mean(gen_fake)
 
                 # Gradient = 0
@@ -702,7 +681,7 @@ class train_GAN():
 
             print("Epoch:", epoch)
             # Iteration über die Bilder
-            for i, data in enumerate(train_loader, 0):
+            for i, data in tqdm(enumerate(train_loader, 0)):
 
                 img_real, label = data
 
@@ -808,7 +787,7 @@ class train_GAN():
             train_GAN.saves_gen_samples(
                 fake_img, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/NormalizationGAN')
 
-        PATH_DCGAN= "./state_save/GAN_Norm.tar"
+        PATH_DCGAN= "./outputs/GAN_Norm.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict(), "FID": FID_scores},  PATH_DCGAN )
         FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
         print(FID_scores_test)
@@ -855,29 +834,8 @@ class train_GAN():
                 #train_DCGAN.saves_gen_samples(img_real, epoch+start_idx, random_Tensor)
 
                 # Generierung von Fake-Images
-                fake_img = NN_Generator(random_Tensor, GAN_param=0)
+                fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
 
-                ##################
-                # Train Generator#
-                ##################
-
-                #Gradienten = 0
-                Gen_Opt.zero_grad()
-
-                # Übergeben der Fakes-Images an den Diskriminator (Versuch den Diskriminator zu täuschen)
-                pred_Gen = NN_Discriminator(fake_img, GAN_param=0)
-                target_Gen = torch.ones(batchsize, 1, device=device)
-                # Torch.ones gibt einen tensor zurück welcher nur den Wert 1 enthält, und dem Shape Size = BATCH_SIZE
-                target_Gen = torch.flatten(target_Gen)
-
-                #loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
-                criterion_Gen = nn.BCELoss()
-                loss_Gen = criterion_Gen(pred_Gen, target_Gen)
-                #print("loss_Gen:", loss_Gen)
-                loss_Gen.backward()
-
-                # Backprop./ Update der Gewichte des Generators
-                Gen_Opt.step()
 
                 ######################
                 # Train Discriminator#
@@ -903,7 +861,7 @@ class train_GAN():
 
                 # Berechnung des Losses mit realen Bildern
 
-                loss_real = torch.nn.ReLU()(1.0 - pred_real) #, target_real)
+                #loss_real = torch.nn.ReLU()(1.0 - pred_real) #, target_real)
                 #real_score = torch.mean(pred_real).item()
 
                 """
@@ -916,14 +874,38 @@ class train_GAN():
                 target_fake = torch.zeros(fake_img.size(0), 1, device=device)
                 target_fake = torch.flatten(target_fake)
                 # Loss Function - Fehler des Fake-Batch wird berechnet
-                loss_fake = torch.nn.ReLU()(1.0 + pred_fake) #, target_fake)
+                #loss_fake = torch.nn.ReLU()(1.0 + pred_fake) #, target_fake)
                 #fake_score = torch.mean(pred_fake).item()
 
-                loss_sum_Disc = loss_real + loss_fake
-                loss_sum_Disc = loss_sum_Disc.mean()
-                #print(loss_sum_Disc)
+                loss_sum_Disc = torch.max(0.1 + pred_fake) + torch.max(0.1 - pred_real)
+                #loss_sum_Disc= torch.mean(loss_sum_Disc)
+                #loss_sum_Disc = loss_real + loss_fake
+                #loss_sum_Disc = loss_sum_Disc.item().mean()
                 loss_sum_Disc.backward()
                 Dis_Opt.step()
+
+
+                ##################
+                # Train Generator#
+                ##################
+
+                #Gradienten = 0
+                Gen_Opt.zero_grad()
+
+                # Übergeben der Fakes-Images an den Diskriminator (Versuch den Diskriminator zu täuschen)
+                pred_Gen = NN_Discriminator(fake_img, GAN_param=0).to(device)
+                target_Gen = torch.ones(batchsize, 1, device=device)
+                # Torch.ones gibt einen tensor zurück welcher nur den Wert 1 enthält, und dem Shape Size = BATCH_SIZE
+                target_Gen = torch.flatten(target_Gen)
+
+                #loss = F.binary_cross_entropy(pred, target)  # loss_func(pred, target)
+                criterion_Gen = nn.BCELoss()
+                loss_Gen = criterion_Gen(pred_Gen, target_Gen)
+                #print("loss_Gen:", loss_Gen)
+                loss_Gen.backward()
+
+                # Backprop./ Update der Gewichte des Generators
+                Gen_Opt.step()
 
                 CalcFID.trainloop(iters, epoch, num_epochs, i, NN_Generator, param.g_features, param.latent_size, img_list, device, train_loader, GAN_param=0)
                 # Count = i #Index/ Iterationen zählen
@@ -961,7 +943,7 @@ class train_GAN():
             train_GAN.saves_gen_samples(
                 fake_img, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/DiffrentLossesGAN')
 
-        PATH_DCGAN= "./state_save/DiffLoss_GAN.tar"
+        PATH_DCGAN= "./outputs/DiffLoss_GAN.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict(), "FID": FID_scores},  PATH_DCGAN )
         FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
         print(FID_scores_test)
@@ -1134,7 +1116,7 @@ class train_GAN():
             train_GAN.saves_gen_samples(
                 fake_img, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/xAIGAN')
 
-        PATH_xAI= "./state_save/GAN_xAI.tar"
+        PATH_xAI= "./outputs/GAN_xAI.tar"
 
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_xAI )
 
@@ -1338,7 +1320,7 @@ class train_GAN():
             train_GAN.saves_gen_samples(
                 fake_data, epoch+start_idx, random_Tensor,  dir_gen_samples = './outputs/LDGAN')
 
-        PATH_LDGAN= "./state_save/LDGAN.tar"
+        PATH_LDGAN= "./outputs/LDGAN.tar"
 
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_LDGAN)
 
