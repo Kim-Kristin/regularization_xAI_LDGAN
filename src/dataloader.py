@@ -57,7 +57,7 @@ def dataloader(dataset, BATCH_SIZE, split_aufteilung, display_informations=True,
     train_dataloader = torch.utils.data.DataLoader(
         train,
         batch_size=BATCH_SIZE,
-        shuffle=False,
+        shuffle=True,
         drop_last=True,
         worker_init_fn=random_seed,
         num_workers=0,  # num_Worker = 0 because MemoryError
@@ -81,7 +81,7 @@ def dataloader(dataset, BATCH_SIZE, split_aufteilung, display_informations=True,
     test_dataloader = torch.utils.data.DataLoader(
         test,
         batch_size=BATCH_SIZE,
-        shuffle=False,
+        shuffle=True,
         drop_last=True,
         worker_init_fn=random_seed,
         num_workers=0,
