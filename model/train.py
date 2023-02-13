@@ -71,7 +71,7 @@ class train_GAN():
         iters=0
         print("starting Training Vanilla DCGAN")
         # Iteration over Epochen
-        for epoch in enumerate(num_epochs):
+        for epoch in range(num_epochs):
 
             print("Epoch:", epoch)
             # Iteration Batches
@@ -556,7 +556,7 @@ class train_GAN():
             print("Epoch:", epoch)
 
             # Iteration Batches
-            for i, data in enumerate(train_loader, 0):
+            for i, data in tqdm(enumerate(train_loader, 0)):
 
                 img_real, label = data
 
