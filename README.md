@@ -58,11 +58,17 @@ After your environment it setup, run the main.py to start the experiment.
 - [xAIGAN ](https://github.com/explainable-gan/XAIGAN)
 -
 
-### Examples of generated Images of the Training after 5 epochs
+### Examples of generated Images of the Training for each method after 5 epochs
+#### DCGAN
 ![DCGAN](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/VanillaGAN/gen_img-0005.png)
+#### Gradient Penalty
 ![Gradient Penalty](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/GradientPenaltyGAN/gen_img-0005.png)
+#### WGAN
 ![WGAN](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/WeightClippingGAN/gen_img-0005.png)
+#### WGAN-GP
 ![WGAN-GP](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/WGANGP/gen_img-0005.png)
+#### Instance Normalization
 ![Instance Normalization](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/NormalizationGAN/gen_img-0005.png)
-![Instance Normalization](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/LDGAN/gen_img-0005.png)
+#### xAI-LDGAN
+![LDGAN](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/LDGAN/gen_img-0005.png)
 
