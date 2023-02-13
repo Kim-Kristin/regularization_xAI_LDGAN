@@ -5,6 +5,17 @@ This repository contains the code moduls and data for our assignment with the sa
 ### The objective of this repository
 The objective of the implemented experiment is to evaluate the xAI-LDGAN as a regularization method against universal state-of-the-art regularization methods for Generative Adversarial Networks. The result of this evaluation is a comparison between the xAI-LDGAN and conventional regularization methods. This should provide information on whether the xAI-LDGAN is a better alternative to the universal state-of-the-art regularization methods.
 
+#### Baseline Model
+- DCGAN
+#### State-of-the-art regularization methos
+- Gradient Penalty
+- Wasserstein GAN
+- Wasserstein GAN with gradient Penalty
+- Instance Normalization
+
+#### New regularisation method
+- xAI Limited Discriminator GAN
+
 ### Data
 - [CIFAR-10 Dataset ](https://www.cs.toronto.edu/~kriz/cifar.html)
 ### Main Module
@@ -42,4 +53,16 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 After your environment it setup, run the main.py to start the experiment.
+
+### References
+- [xAIGAN ](https://github.com/explainable-gan/XAIGAN)
+-
+
+### Examples of generated Images of the Training after 5 epochs
+![DCGAN](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/VanillaGAN/gen_img-0005.png)
+![Gradient Penalty](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/GradientPenaltyGAN/gen_img-0005.png)
+![WGAN](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/WeightClippingGAN/gen_img-0005.png)
+![WGAN-GP](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/WGANGP/gen_img-0005.png)
+![Instance Normalization](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/NormalizationGAN/gen_img-0005.png)
+![Instance Normalization](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/outputs/LDGAN/gen_img-0005.png)
 
