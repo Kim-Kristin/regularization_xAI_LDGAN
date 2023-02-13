@@ -1,14 +1,11 @@
-# Regularisierung von tiefen Neuronalen Netzen zur Bildgenerierung mittels xAI:Evaluierung der Effektivität von eXplainable LDGAN gegenüber State-of-the-Art Regularisierungsmethoden
- / Regularization of deep neural networks for image generation using xAI:Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods.Regularization of deep neural networks for image generation using xAI:Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods.
+# Regularisierung von tiefen Neuronalen Netzen zur Bildgenerierung mittels xAI:Evaluierung der Effektivität von eXplainable LDGAN gegenüber State-of-the-Art Regularisierungsmethoden [Regularization of deep neural networks for image generation using xAI:Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods.Regularization of deep neural networks for image generation using xAI:Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods]
 
 This repository contains the code moduls and data for our assignment with the same name.
 
 ### Data
 - [CIFAR-10 Dataset ](https://www.cs.toronto.edu/~kriz/cifar.html)
-
 ### Main Module
-- [STARTPOINT of the Programm] (https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/model/main.py)
-
+- [Main to Start the experiment ](https://github.com/Kim-Kristin/regularization_xAI_LDGAN/blob/main/model/main.py)
 ### Requirements and Installation
 To setup your environment, run :
 
@@ -41,6 +38,5 @@ python -m venv .venv
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-
-After your environment it setup, run the main.py file to start the experiment.
+After your environment it setup, run the main.py to start the experiment.
 
