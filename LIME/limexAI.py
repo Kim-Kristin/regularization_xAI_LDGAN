@@ -1,6 +1,6 @@
 # References:
 # 1. https://medium.datadriveninvestor.com/xai-with-lime-for-cnn-models-5560a486578
-# 2.
+# 2. https://github.com/explainable-gan/XAIGAN
 
 # import packages
 
@@ -42,12 +42,12 @@ def get_explanation(generated_data, discriminator, prediction, device,trained_da
 
     # initialize temp values to all 1s
     temp = values_target(size=generated_data.size(), value=1.0, device=device)
-    #print("pred", prediction)
+
     # mask values with low prediction
     mask = (prediction < 0.5).view(-1)
     indices = (mask.nonzero(as_tuple=False)).detach().cpu().numpy().flatten().tolist()
-    #print ("LENGTH INDICES ", indices)
-    #print("Mask", mask)
+
+
 
     data = generated_data[mask, :]
     data.to(device)
@@ -72,11 +72,10 @@ def get_explanation(generated_data, discriminator, prediction, device,trained_da
             tmp = np.reshape(tmp, (64, 64, 3)).astype(np.double)
             #tmp =
             exp = explainer.explain_instance(tmp, batch_predict_cifar, num_samples=100)
-            temp[indices[i], :] = mask.clone().detach() #torch.tensor(mask) #.astype(np.float))
+            temp[indices[i], :] = mask.clone().detach()
         del discriminatorLime
 
-    if device == "mps" or device == "cuda":
-        temp = temp.to(device)
+    temp = temp.to(device)
     set_values(normalize_vector(temp))
 
 def explanation_hook_cifar(module, grad_input, grad_output):
@@ -129,7 +128,6 @@ def batch_predict_cifar(images):
 def values_target(size: tuple, value: float, device):
     #returns tensor filled with value of given size
     result = Variable(full(size=size, fill_value=value))
-    if device == "mps" or device =="cuda":
-        result = result.to(device)
+    result = result.to(device)
     return result
 
