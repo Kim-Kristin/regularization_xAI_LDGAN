@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 
 
-def test_gan(NN_Generator, model, device, random_Tensor,reg_model):
+def test_gan(NN_Generator, model, device, random_Tensor,reg_model, GAN_param):
     print("Testing start")
     NN_Generator.eval()
     FID_scores_test = []
@@ -33,7 +33,7 @@ def test_gan(NN_Generator, model, device, random_Tensor,reg_model):
             fake_img = NN_Generator(random_Tensor, GAN_param=0).to(device)
             saves_gen_samples(
                 fake_img, iters, random_Tensor,  dir_gen_samples = './outputs/fake/'+reg_model)
-            CalcFID.testloop(NN_Generator, param.g_features, param.latent_size, img_list, device, GAN_param=0)
+            CalcFID.testloop(NN_Generator, param.g_features, param.latent_size, img_list, device, GAN_param= GAN_param)
             iters += 1
             fretchet_dist_test =  CalcFID.calculate_fretchet(input,fake_img,model, device=device) #calc FID
             FID_scores_test.append(fretchet_dist_test.item())
@@ -51,10 +51,7 @@ def show_images(images, nmax=64):
     ax.set_yticks([])
     plt.title("Fake_Images")
     ax.imshow(make_grid(tensor_norm(images.detach()[:nmax]), nrow=8).permute(
-        1, 2, 0).cpu())  # detach() : erstellt eine neue "Ansicht",
-    # sodass diese Operationen nicht mehr verfolgt werden,
-    # d. h. der Gradient wird nicht berechnet und der Untergraph
-    # wird nicht aufgezeichnet > Speicher wird nicht verwendet
+        1, 2, 0).cpu())
 
 def saves_gen_samples(gen_img, idx, random_Tensor, dir_gen_samples):
     # Randomisierter Tensor wird an den Generator übergeben
