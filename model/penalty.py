@@ -14,7 +14,7 @@ def compute_gradient_penalty(D, real_samples, fake_samples, device):
     d_interpolates = D(interpolates, GAN_param=3).to(device)
     #print(d_interpolates.shape)
     fake = torch.ones(real_samples.size(0), 1).requires_grad_(False)
-    fake = torch.flatten(fake)
+    fake = torch.flatten(fake).to(device)
     #print(fake.shape)
     # Get gradient w.r.t. interpolates
     gradients = torch.autograd.grad(
@@ -43,7 +43,7 @@ def compute_GAN_gradient_penalty(D, real_samples, fake_samples, device):
     d_interpolates = D(interpolates, GAN_param=3).to(device)
     #print(d_interpolates.shape)
     fake = torch.ones(real_samples.size(0), 1).requires_grad_(False)
-    fake = torch.flatten(fake)
+    fake = torch.flatten(fake).to(device)
     #print(fake.shape)
     # Get gradient w.r.t. interpolates
     gradients = torch.autograd.grad(
