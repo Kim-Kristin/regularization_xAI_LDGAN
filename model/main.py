@@ -29,9 +29,6 @@ from discriminator import DiscriminatorNetCifar10 as NN_Discriminator
 from FID import CalcFID
 from train import train_GAN
 import sys
-import plot
-import test
-
 
 #Support function for clearing terminal output
 def cls():
