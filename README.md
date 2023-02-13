@@ -56,7 +56,6 @@ After your environment it setup, run the main.py to start the experiment.
 
 ### References
 - [xAIGAN ](https://github.com/explainable-gan/XAIGAN)
--
 
 ### Examples of generated Images of the Training for each method after 5 epochs
 #### DCGAN
