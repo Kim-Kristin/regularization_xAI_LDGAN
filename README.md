@@ -1,6 +1,9 @@
-# Regularisierung von tiefen Neuronalen Netzen zur Bildgenerierung mittels xAI:Evaluierung der Effektivität von eXplainable LDGAN gegenüber State-of-the-Art Regularisierungsmethoden [Regularization of deep neural networks for image generation using xAI:Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods.Regularization of deep neural networks for image generation using xAI:Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods]
+# Regularisierung von tiefen Neuronalen Netzen zur Bildgenerierung mittels xAI:Evaluierung der Effektivität von eXplainable LDGAN gegenüber State-of-the-Art Regularisierungsmethoden   [Regularization of deep neural networks for image generation using xAI: Evaluation of the effectiveness of eXplainable LDGAN versus state-of-the-art regularization methods]
 
 This repository contains the code moduls and data for our assignment with the same name.
+
+### The objective of this repository
+The objective of the implemented experiment is to evaluate the xAI-LDGAN as a regularization method against universal state-of-the-art regularization methods for Generative Adversarial Networks. The result of this evaluation is a comparison between the xAI-LDGAN and conventional regularization methods. This should provide information on whether the xAI-LDGAN is a better alternative to the universal state-of-the-art regularization methods.
 
 ### Data
 - [CIFAR-10 Dataset ](https://www.cs.toronto.edu/~kriz/cifar.html)
