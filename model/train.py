@@ -178,7 +178,7 @@ class train_GAN():
         PATH_DCGAN= "./outputs/VanillaGAN.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict(), "FID": FID_scores},  PATH_DCGAN )
 
-        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
+        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model, GAN_param=0)
         print(FID_scores_test)
 
         return {"Loss_G" : loss_Gen.item(), "Loss_D" : loss_sum_Disc.item(), "FID" : FID_scores, "FID_test":FID_scores_test}
@@ -282,7 +282,7 @@ class train_GAN():
         PATH_GP= "./outputs/GAN_GP.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_GP)
 
-        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
+        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model, GAN_param=0)
 
         return G_losses_GP, D_losses_GP , FID_scores, FID_scores_test
 
@@ -398,7 +398,7 @@ class train_GAN():
         PATH_WP_Norm= "./outputs/WP_Norm.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_WP_Norm)
 
-        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
+        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model, GAN_param=0)
         return G_losses, D_losses, FID_scores, FID_scores_test
 
     """def train_GAN_with_WP(NN_Discriminator, NN_Generator, model, train_loader, random_Tensor, num_epochs, device, lr, batch_size, weight_init, g_features, latent_size, start_idx=1):
@@ -636,7 +636,7 @@ class train_GAN():
         PATH_WGAN= "./model/WGAN_GP.tar"
 
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_WGAN)
-        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
+        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model, GAN_param=0)
 
         return G_losses, C_losses, FID_scores, FID_scores_test
 
@@ -781,7 +781,7 @@ class train_GAN():
         # Save State of trained model
         PATH_DCGAN= "./outputs/GAN_Norm.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict(), "FID": FID_scores},  PATH_DCGAN )
-        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
+        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model, GAN_param=1)
         print(FID_scores_test)
 
         return {"Loss_G" : loss_Gen.item(), "Loss_D" : loss_sum_Disc.item(), "FID" : FID_scores, "FID_test:":FID_scores_test}
@@ -1334,7 +1334,7 @@ class train_GAN():
         PATH_LDGAN= "./outputs/LDGAN.tar"
         torch.save({"generator": NN_Generator.state_dict(), "discriminator": NN_Discriminator.state_dict()}, PATH_LDGAN)
 
-        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model)
+        FID_scores_test = test.test_gan(NN_Generator, model, device, random_Tensor, reg_model, GAN_param=1)
         return G_losses, D_losses, FID_scores, FID_scores_test
 
     # Helpfunction for Tensor Normalization
