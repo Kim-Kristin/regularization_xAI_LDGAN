@@ -30,6 +30,8 @@ from FID import CalcFID
 from train import train_GAN
 import sys
 import plot
+import test
+
 
 #Support function for clearing terminal output
 def cls():
